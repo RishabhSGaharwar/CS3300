@@ -1,0 +1,166 @@
+Checklist for Assignment P1
+
+1) Have you tarred + gzipped the file as XXXXXXXX.tar.gz (your 8-digit roll number) or zipped it to XXXXXXXX.tgz?
+Yes
+
+2) Does your tar.gz / .tgz file expand (by using the command tar xvzf) to the base directory named XXXXXXXX (your 8-digit roll number), and which in turns contains all your files?
+Yes
+
+3) Have you removed the a.out files and other generated files from your tar ball?
+Yes
+
+4) Does the above created P1 contains P1.y, P1.l, that can be compiled using bison -d P1.y; flex P1.l; gcc P1.tab.c lex.yy.c -lfl -o P1?
+Yes
+
+5) Does your generated P1 take input from Standard Input (for usage of redirection) ?
+Yes
+
+6) Does your generated P1 write output to Standard Output (for usage of redirection) ?
+Yes
+
+7) Have you removed all the debugging messages that your program may output?
+Yes
+
+8) Is (some part of) the assignment plagiarized? 
+No
+
+9) Any comments about your evaluation strategy :
+Is there a way to show the reason for compilation error?
+
+I've handled unary + and -
+
+In the current submission, I'm not adding ( ) in macros (check addendum below)
+--------------------------------------------------------------------------------------------------------
+ADDENDUM:
+Since there is a lot of confusion about the placement of parentheses in macro call at the time of writing of this addendum, I would like to mention that on editing parseBody function as follows
+
+char * parseBody(char *args, char **parameter, char *body, int parametercount, int paranthesis)
+    {
+        int argcount = 1;
+        for(int i=0; i<strlen(args); i++)
+        {
+            if(args[i]==',')
+            {
+                argcount++;
+            }
+        }
+        if(argcount!=parametercount) {yyerror(NULL);}
+        char **arguments = (char **)(malloc(sizeof(char*)*parametercount));
+        int start = 0, end = 0;
+        for(int i=0; i<parametercount; i++)
+        {
+            int k = start;
+            while(k<strlen(args) && args[k]!=',')
+            {
+                k++;
+            }
+            end = k;
+            if(paranthesis==0)
+            {
+                char *argname = (char *)(malloc(sizeof(char)*(end-start+1)));
+                for(int j=start; j<end; j++)
+                {
+                    argname[j-start] = args[j];
+                }
+                argname[end-start] = '\0';
+                arguments[i] = strdup(argname);
+                free(argname);
+            }
+            else
+            {
+                char *argname = (char *)(malloc(sizeof(char)*(end-start+1)));
+                for(int j=start; j<end; j++)
+                {
+                    argname[j-start] = args[j];
+                }
+                argname[end-start] = '\0';
+                char *newag = (char *)(malloc(sizeof(char)*(strlen(argname)+2)));
+                strcpy(newag, "(");
+                strcat(newag, argname);
+                strcat(newag, ")");
+                newag[strlen(argname)+2] = '\0';
+                arguments[i] = strdup(newag);
+                free(argname); 
+                free(newag);               
+            }
+            start = end+2;
+        }
+        start = 0, end = -1;
+        int sz = 0;
+        start=0, end=-1;
+        for(int i=0; i<strlen(body); i++)
+        {
+            if(body[i]==' ')
+            {
+                end = i;
+                int x = end-start+1;
+                char *var = (char *)(malloc(sizeof(char)*x));
+                for(int j=start; j<end; j++)
+                {
+                    var[j-start] = body[j];
+                }
+                var[end-start] = '\0';
+                int ii=0;
+                for(; ii<parametercount; ii++)
+                {
+                    if(strcmp(parameter[ii], var)==0)
+                    {
+                        sz += strlen(arguments[ii]);
+                        break;
+                    }
+                }
+                if(ii==parametercount)
+                {
+                    sz += strlen(var);
+                }
+                sz++;
+                start = end+1;
+                free(var);
+            }
+        }
+        if(body[strlen(body)-1]==')')
+        {
+            sz++;
+        }
+        char * newbody = (char *)(malloc(sizeof(char)*(sz+1)));
+        memset(newbody, '\0', sizeof(newbody));
+        start=0, end=-1;
+        for(int i=0; i<strlen(body); i++)
+        {
+            if(body[i]==' ')
+            {
+                end = i;
+                int x = end-start+1;
+                char *var = (char *)(malloc(sizeof(char)*x));
+                for(int j=start; j<end; j++)
+                {
+                    var[j-start] = body[j];
+                }
+                var[end-start] = '\0';
+                int ii=0;
+                for(; ii<parametercount; ii++)
+                {
+                    if(strcmp(parameter[ii], var)==0)
+                    {
+                        strcat(newbody, arguments[ii]);
+                        break;
+                    }
+                }
+                if(ii==parametercount)
+                {
+                    strcat(newbody, var);
+                }
+                start = end+1;
+                free(var);
+                strcat(newbody, " ");
+            }
+        }
+        if(body[strlen(body)-1]==')')
+        {
+            newbody[sz-1] = ')';
+        }
+        return newbody;
+    }
+where paranthesis tells whether we need to add paranthesis in arguments or not. This works correctly on all public testcases but fails in 3 private testcases for many people (ref : mailthread)
+
+Thus, I've submitted a file with unedited arguments.
